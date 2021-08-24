@@ -1,21 +1,15 @@
 import pygame
 import random
 import sys
-from settings import *
+import scripts.tools as tools
+import scripts.settings as settings
 
 
 class Game:
 
     def __init__(self):
-        ####################### INITIALIZE GAME #######################
-        pygame.init()
-        self.running = True  # running the program
-        self.playing = False  # in gameplay part
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption('Jetpack Goodride')
-        pygame.display.set_icon(pygame.image.load(ICON_LOC))
-        self.clock = pygame.time.Clock()
-        self.dt = None
+        # paused screen
+        self.paused_screen_surface = pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA, 32)
 
         ####################### AUDIOS #######################
 
@@ -43,88 +37,90 @@ class Game:
         self.DIED = pygame.USEREVENT + 1  # event id
         self.died = pygame.event.Event(self.DIED)  # event object
 
-        ######################## COLORS #########################
-        self.BLACK = pygame.color.Color(0, 0, 0)
-        self.WHITE = pygame.color.Color(255, 255, 255)
-        self.YELLOW = pygame.color.Color(255, 255, 0)
+        ######################## COLORS ######################### TODO REMOVE
+        settings.BLACK = pygame.color.Color(0, 0, 0)
+        settings.WHITE = pygame.color.Color(255, 255, 255)
+        settings.YELLOW = pygame.color.Color(255, 255, 0)
 
         ####################### GLOBAL VARIABLES #######################
+        self.gravity = settings.GRAVITY  # TODO maybe a item that change gravity?
+
+        # score
         self.score = 0
         self.high_score = 0
 
-        self.gravity = GRAVITY
-
+        # player
         self.is_moving_up = False
         self.dead = False
-        self.player_pos_y = 0
-        self.player_vel_x = DEFAULT_X_VELOCITY  # TODO make game progressive faster
+        self.paused = False
+        self.player_pos_y = 240
+        self.player_vel_x = settings.DEFAULT_X_VELOCITY  # TODO make game progressive faster
         self.player_vel_y = 0
 
+        # objets positions
         self.bg_pos_x = 0
-
         self.foreground_pos_x = 0  # obstacles and coins pos FIRST_OBSTACLE_OFFSET
+
+        # obstacles
         self.obstacles_list = []
         self.obstacle_num = 0
-        # pygame.time.set_timer(self.spawn_obstacle, OBSTACLE_SPAWN_TIME)  # call the event spawn_obstacle every x milliseconds
 
+        # lerp
         self.lerp_factor = 0
         self.lerp_x_vel = False
         self.player_vel_x_start = 0
 
-        # MENU KEYS
-        self.UP_KEY = False
-        self.DOWN_KEY = False
-        self.START_KEY = False
-        self.BACK_KEY = False
-
         ####################### LOAD SAVE #######################
         self.load_save()
 
-    def game_loop(self):
-        while self.playing:
-            self.dt = self.clock.tick(FPS) / 1000  # delta time in seconds | cap fps around 120
+    def update_game(self, main):
+        self.main = main
 
-            self.check_events()
-            self.check_obstacles()
-            self.move_things()
-            self.check_collisions()
-            self.update_x_velocity()
-            self.debug()
+        self.check_events(main)
+        if self.paused:
+            self.main.dt = 0
+        self.check_obstacles()
+        self.move_things()
+        self.check_collisions()
+        self.update_x_velocity()
+        self.debug()
 
-            # if self.START_KEY:
-            #     self.playing = False
+        # if self.START_KEY:
+        #     self.playing = False
 
-            # GUI
-            self.draw_text('Distance: %i' % round(self.score), 'left', 48, (34, 90))
-            self.draw_text('Velocity: %i' % round(self.player_vel_x), 'left', 32, (34, 116))
+        # GUI
+        tools.draw_text(self.main.screen, 'Distance: %i' % round(self.score), 'left', 48, (34, 90))
+        tools.draw_text(self.main.screen, 'Velocity: %i' % round(self.player_vel_x), 'left', 32, (34, 116))
 
-            self.reset_keys()
-            pygame.display.update()
+        self.check_paused()
+        self.reset_keys()
+        pygame.display.update()
 
     ################## MOVE ##################
 
-    # TODO move this to game loop
+    # TODO move this to game loop and functions
     def move_things(self):
         # do the death lerp velocity
         if self.lerp_x_vel:
-            self.lerp_factor += self.dt*0.75
+            self.lerp_factor += self.main.dt*0.75
             self.player_vel_x = self.lerp(self.player_vel_x_start, 0, self.lerp_factor)
             if self.player_vel_x <= 0:
                 self.lerp_x_vel = False
                 self.player_vel_x = 0
 
+
         # background movement
         self.move_background()
 
         # obstacle movement
-        self.foreground_pos_x -= self.player_vel_x * self.dt * 1.1  # 1.1 is for parallax with background
+        self.foreground_pos_x -= self.player_vel_x * self.main.dt * 1.1  # 1.1 is for parallax with background
         self.move_obstacles(self.obstacles_list)
 
         # change player velocity (up || down) -change faster if going faster
         if not self.is_moving_up:
-            self.player_vel_y += self.gravity * self.dt * self.player_vel_x * 1.8
+            self.player_vel_y += self.gravity * self.main.dt * self.player_vel_x * 1.8
         else:
-            self.player_vel_y += -self.gravity * self.dt * self.player_vel_x * 1.8
+            self.player_vel_y += -self.gravity * self.main.dt * self.player_vel_x * 1.8
 
         # keep player inside the bound
         if self.player_pos_y < 80:  # if touch celling
@@ -134,20 +130,20 @@ class Game:
             self.player_pos_y = 645 - self.player_surface.get_size()[0]
             self.player_vel_y = 0
         else:
-            self.player_pos_y += self.player_vel_y * self.dt
+            self.player_pos_y += self.player_vel_y * self.main.dt
 
         # update player position and draw
         self.player_rect.y = self.player_pos_y
-        self.screen.blit(self.player_surface, self.player_rect)
+        self.main.screen.blit(self.player_surface, self.player_rect)
 
         # increase distance
         if not self.dead:
-            self.score += self.dt * self.player_vel_x * 0.05  # TODO change this to foreground x pos
+            self.score += self.main.dt * self.player_vel_x * 0.05  # TODO change this to foreground x pos
 
     def move_background(self):
-        self.bg_pos_x -= self.player_vel_x * self.dt
-        self.screen.blit(self.bg_surface, (self.bg_pos_x, 0))  # put bg_surface on screen surface
-        self.screen.blit(self.bg_surface, (self.bg_pos_x + 1536, 0))
+        self.bg_pos_x -= self.player_vel_x * self.main.dt
+        self.main.screen.blit(self.bg_surface, (self.bg_pos_x, 0))  # put bg_surface on screen surface
+        self.main.screen.blit(self.bg_surface, (self.bg_pos_x + 1536, 0))
         if self.bg_pos_x <= -1536:
             self.bg_pos_x += 1536
 
@@ -155,13 +151,13 @@ class Game:
     def move_obstacles(self, obstacles):
         for obstacle, relative_pos in obstacles:
             obstacle.x = self.foreground_pos_x + relative_pos  # move
-            self.screen.blit(self.obstacles_surface, [obstacle.x, obstacle.y])  # draw
+            self.main.screen.blit(self.obstacles_surface, [obstacle.x, obstacle.y])  # draw
 
     ################## CREATE ##################
 
     def create_obstacle(self):
         # [rect object, relative position] TODO change 100% random y to choose from a list
-        return [self.obstacles_surface.get_rect(center=[0, random.randint(190, 540)]), self.obstacle_num * OBSTACLE_OFFSET + FIRST_OBSTACLE_OFFSET]
+        return [self.obstacles_surface.get_rect(center=[0, random.randint(190, 540)]), self.obstacle_num * settings.OBSTACLE_OFFSET + settings.FIRST_OBSTACLE_OFFSET]
 
     ################## COLLISION ##################
 
@@ -176,49 +172,51 @@ class Game:
             if obstacle.colliderect(self.player_rect):  # check if any obstacle is colliding with player
                 pygame.event.post(self.died)
 
-    ################## LOAD/SAVE ################## TODO move this to main maybe, load and save options too
+    ################## LOAD/SAVE ##################
+
+    # TODO maybe move this to main, load and save options too
 
     def load_save(self):
         try:
-            with open(HIGH_SCORE_LOC, 'r+') as file:
+            with open(settings.HIGH_SCORE_LOC, 'r+') as file:
                 self.high_score = int(file.read())
                 print('past save loaded')
         except:
-            with open(HIGH_SCORE_LOC, 'w+') as file:
+            with open(settings.HIGH_SCORE_LOC, 'w+') as file:
                 file.write('0')
                 print('save file created')
         print(self.high_score)
 
     def save_game(self, HS):
-        with open(HIGH_SCORE_LOC, 'w') as file:
+        with open(settings.HIGH_SCORE_LOC, 'w') as file:
             self.score = int(file.write(str(HS)))
             print('Saved')
 
     #################### DEBUG ####################
 
     def debug(self):
-        if DEBUG:
-            if DEBUG_HIT_BOXES:
+        if settings.DEBUG:
+            if settings.DEBUG_HIT_BOXES:
                 self.debug_hit_boxes()
-            if DEBUG_SCREEN_SIZE_BOX:
+            if settings.DEBUG_SCREEN_SIZE_BOX:
                 self.debug_screen_box()
 
     def debug_hit_boxes(self):
         # obstacles
-        pygame.draw.rect(self.obstacles_surface, self.YELLOW, pygame.Rect(0, 0, 92, 218), 1)
+        pygame.draw.rect(self.obstacles_surface, settings.YELLOW, pygame.Rect(0, 0, 92, 218), 1)
 
         # player
         if not self.dead:  # flying
-            pygame.draw.rect(self.player_surface, self.YELLOW, pygame.Rect(0, 0, 64, 68), 1)
+            pygame.draw.rect(self.player_surface, settings.YELLOW, pygame.Rect(0, 0, 64, 68), 1)
         elif self.dead:  # dead
-            pygame.draw.rect(self.player_surface, self.YELLOW, pygame.Rect(0, 0, 82, 74), 1)
+            pygame.draw.rect(self.player_surface, settings.YELLOW, pygame.Rect(0, 0, 82, 74), 1)
 
     def debug_screen_box(self):
-        pygame.draw.rect(self.screen, self.YELLOW, pygame.Rect(0, 0, WIDTH, HEIGHT), 1)
+        pygame.draw.rect(self.main.screen, settings.YELLOW, pygame.Rect(0, 0, settings.WIDTH, settings.HEIGHT), 1)
 
     ###############################################
 
-    def check_events(self):  # catch events
+    def check_events(self, main):  # catch events
         for event in pygame.event.get():  # go through all events
             # quit game
             if event.type == pygame.QUIT:  # if it has a event type of QUIT, than quit
@@ -240,16 +238,12 @@ class Game:
 
             # inputs key down
             if event.type == pygame.KEYDOWN and not self.dead:
-                if event.key == pygame.K_RETURN:
-                    self.START_KEY = True
+                # pause
                 if event.key == pygame.K_ESCAPE:
-                    self.BACK_KEY = True
-                if event.key == pygame.K_s:
-                    self.DOWN_KEY = True
-                if event.key == pygame.K_w:
-                    self.UP_KEY = True
-
-                # in game key, maybe change later
+                    if self.paused:
+                        self.paused = False
+                    else:
+                        self.paused = True
                 if event.key == pygame.K_w:
                     self.is_moving_up = True
 
@@ -262,7 +256,7 @@ class Game:
     def check_obstacles(self):
         # create obstacles if needed
         # travelled distance > distance covered with obstacles until now
-        if -self.foreground_pos_x > OBSTACLE_OFFSET * (self.obstacle_num + 1):
+        if -self.foreground_pos_x > settings.OBSTACLE_OFFSET * (self.obstacle_num + 1):
             self.obstacles_list.append(self.create_obstacle())
             self.obstacle_num += 1
             print(len(self.obstacles_list))
@@ -278,20 +272,12 @@ class Game:
         return ((1 - C) * A) + ((1 - C) * B)
 
     def update_x_velocity(self):
-        if not self.dead and self.player_vel_x < MAX_X_VELOCITY:
-            self.player_vel_x += self.dt * 4  # make game progressive faster
+        if not self.dead and self.player_vel_x < settings.MAX_X_VELOCITY:
+            self.player_vel_x += self.main.dt * 4  # make game progressive faster
 
-    def draw_text(self, text, align, size, pos):
-        font = pygame.font.Font(DEFAULT_FONT_LOC, size)
-        text_surface = font.render(text, True, self.WHITE)
-        text_rect = text_surface.get_rect()
-        if align == 'center':
-            text_rect.center = pos
-        elif align == 'left':
-            text_rect.bottomleft = pos
-        elif align == 'right':
-            text_rect.bottomright = pos
-        else:
-            raise ValueError('Align option not valid')
-        self.screen.blit(text_surface, text_rect)
-
+    def check_paused(self):
+        if self.paused:
+            # pygame.draw.rect(self.main.screen, (0, 0, 0, 70), pygame.Rect(0, 0, settings.WIDTH, settings.HEIGHT))
+            self.paused_screen_surface.fill((0, 0, 0, 140))
+            self.main.screen.blit(self.paused_screen_surface, (0, 0))
+            tools.draw_text(self.main.screen, 'PAUSED', 'center', 96, (settings.WIDTH // 2, settings.HEIGHT // 2))
