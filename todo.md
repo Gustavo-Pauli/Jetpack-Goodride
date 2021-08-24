@@ -13,12 +13,16 @@
 
 * UI
     * Menu
-    * Credits
+    * Back button
+    * ~~Credits~~
     * Death screen
     * Shop
     
+* Shop
+    * Skins colors ?
+    * Different FX
 
 * Art
-    * Menu background
-    * Buttons
+    * ~~Menu background~~
+    * Shop
     

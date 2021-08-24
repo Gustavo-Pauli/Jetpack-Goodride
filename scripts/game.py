@@ -37,10 +37,6 @@ class Game:
         self.DIED = pygame.USEREVENT + 1  # event id
         self.died = pygame.event.Event(self.DIED)  # event object
 
-        ######################## COLORS ######################### TODO REMOVE
-        settings.BLACK = pygame.color.Color(0, 0, 0)
-        settings.WHITE = pygame.color.Color(255, 255, 255)
-        settings.YELLOW = pygame.color.Color(255, 255, 0)
 
         ####################### GLOBAL VARIABLES #######################
         self.gravity = settings.GRAVITY  # TODO maybe a item that change gravity?
