@@ -12,7 +12,7 @@
     
 
 * UI
-    * Menu
+    * ~~Menu~~
     * Back button
     * ~~Credits~~
     * Death screen
