@@ -19,7 +19,7 @@ class Main:
         self.running = True  # running the program
         self.playing = False  # in gameplay part
         self.menu = True
-        self.game = game.Game()
+        self.game = game.Game(self)
         self.menu = menu.Menu(self)
 
     def main_loop(self):

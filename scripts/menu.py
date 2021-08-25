@@ -12,6 +12,7 @@ class Menu:
         self.current_menu = 'MainMenu'
 
         self.main_menu = MainMenu(self)
+        self.shop = Shop(self)
         self.credits = Credits(self)
 
         # background image
@@ -23,6 +24,8 @@ class Menu:
 
         if self.current_menu == 'MainMenu':
             self.main_menu.update()
+        elif self.current_menu == 'Shop':
+            self.shop.update()
         elif self.current_menu == 'Credits':
             self.credits.update()
 
@@ -91,7 +94,7 @@ class MainMenu:
             self.menu.main.playing = True
             self.menu.main.menu = False
         if self.button_shop.check_collision():
-            pass
+            self.menu.current_menu = 'Shop'
         if self.button_settings.check_collision():
             self.menu.current_menu = 'Credits'
         if self.button_quit.check_collision():
@@ -157,6 +160,66 @@ class Credits:
     def draw_logo(self):
         self.menu.main.screen.blit(self.logo_image, (settings.WIDTH * 2.8 // 10 - self.logo_image.get_size()[0] // 2,
                                                      settings.HEIGHT // 2 - self.logo_image.get_size()[1] // 2))
+
+    def draw_buttons(self):
+        self.button_sound_on.draw()
+        self.button_back.draw()
+
+    def check_buttons_interactions(self):
+        if self.button_sound_on.check_collision():
+            pass
+        if self.button_back.check_collision():
+            self.menu.current_menu = 'MainMenu'
+
+
+class Shop:
+    def __init__(self, menu):
+        self.menu = menu
+
+        self.transparency_surface = pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA, 32)
+
+        # logo
+        self.logo_image = pygame.image.load('assets/sprites/LogoGlow.png').convert_alpha()
+        self.logo_image = pygame.transform.smoothscale(self.logo_image, (int(self.logo_image.get_size()[0] * 0.4), int(self.logo_image.get_size()[1] * 0.4)))
+
+        # buttons images
+        self.sound_on_image = pygame.image.load('assets/sprites/SoundOn.png').convert_alpha()
+        self.back_image = pygame.image.load('assets/sprites/ButtonBack.png').convert_alpha()
+
+        # buttons
+        self.button_sound_on = tools.Button(self.menu.main.screen, self.sound_on_image, (1234, 0))
+        self.button_back = tools.Button(self.menu.main.screen, self.back_image, (20, 20))
+
+    def update(self):
+        self.check_events()
+
+        self.menu.draw_background()
+
+        self.transparency_surface.fill((0, 0, 0, 100))
+        self.menu.main.screen.blit(self.transparency_surface, (0, 0))
+
+        self.draw_logo()
+        self.draw_buttons()
+
+        # tools.draw_text(self.menu.main.screen, 'Shop', 'center', 32, (settings.WIDTH / 2, 200))
+
+        self.check_buttons_interactions()
+
+    def check_events(self):
+        for event in pygame.event.get():  # go through all events
+            # quit
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            # inputs key down
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.menu.current_menu = 'MainMenu'
+
+    def draw_logo(self):
+        self.menu.main.screen.blit(self.logo_image, (settings.WIDTH // 2 - self.logo_image.get_size()[0] // 2,
+                                                     0))
 
     def draw_buttons(self):
         self.button_sound_on.draw()

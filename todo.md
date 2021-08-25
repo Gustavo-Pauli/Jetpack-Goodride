@@ -13,10 +13,12 @@
 
 * UI
     * ~~Menu~~
-    * Back button
+    * ~~Back button~~
     * ~~Credits~~
     * Death screen
     * Shop
+    * Mute button
+    * Change button color on hover
     
 * Shop
     * Skins colors ?

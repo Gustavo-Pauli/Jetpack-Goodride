@@ -7,7 +7,9 @@ import scripts.settings as settings
 
 class Game:
 
-    def __init__(self):
+    def __init__(self, main):
+        self.main = main
+
         # paused screen
         self.paused_screen_surface = pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA, 32)
 
@@ -81,9 +83,6 @@ class Game:
         self.update_x_velocity()
         self.debug()
 
-        # if self.START_KEY:
-        #     self.playing = False
-
         # GUI
         tools.draw_text(self.main.screen, 'Distance: %i' % round(self.score), 'left', 48, (34, 90))
         tools.draw_text(self.main.screen, 'Velocity: %i' % round(self.player_vel_x), 'left', 32, (34, 116))
@@ -104,11 +103,11 @@ class Game:
                 self.lerp_x_vel = False
                 self.player_vel_x = 0
 
-
         # background movement
         self.move_background()
 
         # obstacle movement
+        # if not self.obstacle_num == 0:
         self.foreground_pos_x -= self.player_vel_x * self.main.dt * 1.1  # 1.1 is for parallax with background
         self.move_obstacles(self.obstacles_list)
 
@@ -153,7 +152,7 @@ class Game:
 
     def create_obstacle(self):
         # [rect object, relative position] TODO change 100% random y to choose from a list
-        return [self.obstacles_surface.get_rect(center=[0, random.randint(190, 540)]), self.obstacle_num * settings.OBSTACLE_OFFSET + settings.FIRST_OBSTACLE_OFFSET]
+        return [self.obstacles_surface.get_rect(center=(0, random.randint(190, 540))), settings.FIRST_OBSTACLE_OFFSET - self.foreground_pos_x]
 
     ################## COLLISION ##################
 
@@ -252,7 +251,7 @@ class Game:
     def check_obstacles(self):
         # create obstacles if needed
         # travelled distance > distance covered with obstacles until now
-        if -self.foreground_pos_x > settings.OBSTACLE_OFFSET * (self.obstacle_num + 1):
+        if -self.foreground_pos_x > settings.OBSTACLE_OFFSET * (self.obstacle_num):
             self.obstacles_list.append(self.create_obstacle())
             self.obstacle_num += 1
             print(len(self.obstacles_list))
@@ -264,9 +263,6 @@ class Game:
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.BACK_KEY, self.START_KEY = False, False, False, False
 
-    def lerp(self, A, B, C):
-        return ((1 - C) * A) + ((1 - C) * B)
-
     def update_x_velocity(self):
         if not self.dead and self.player_vel_x < settings.MAX_X_VELOCITY:
             self.player_vel_x += self.main.dt * 4  # make game progressive faster
@@ -277,3 +273,7 @@ class Game:
             self.paused_screen_surface.fill((0, 0, 0, 140))
             self.main.screen.blit(self.paused_screen_surface, (0, 0))
             tools.draw_text(self.main.screen, 'PAUSED', 'center', 96, (settings.WIDTH // 2, settings.HEIGHT // 2))
+
+    @staticmethod
+    def lerp(A, B, C):
+        return ((1 - C) * A) + ((1 - C) * B)
