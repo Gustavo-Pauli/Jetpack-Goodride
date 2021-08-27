@@ -2,7 +2,7 @@
     * Player
         * Fly bullets FX
         * Run animation
-        * Animation (pos lerp) at start of gameplay
+        * ~~Animation (pos lerp) at start of gameplay~~
     * Level
         * Coins
         * Not so random obstacles positions
@@ -15,10 +15,11 @@
     * ~~Menu~~
     * ~~Back button~~
     * ~~Credits~~
-    * Death screen
+    * ~~Death screen~~
     * Shop
     * Mute button
     * Change button color on hover
+    * High score
     
 
 * Shop

@@ -18,12 +18,14 @@ class Main:
         # game states TODO maybe change to stack list
         self.running = True  # running the program
         self.playing = False  # in gameplay part
-        self.menu = True
-        self.game = game.Game(self)
+        self.in_menu = True
+        self.game = game.Game(self)  # TODO remove this and put on the button on click play game
         self.menu = menu.Menu(self)
 
+        self.already_instantiated_game = False
+
     def main_loop(self):
-        while self.menu:
+        while self.in_menu:
             self.update_dt()
             self.menu.update_menu(self)
 
@@ -32,7 +34,7 @@ class Main:
             self.game.update_game(self)
 
     def update_dt(self):
-        self.dt = self.clock.tick(settings.FPS) / 1000  # delta time in seconds | cap fps
+        self.dt = self.clock.tick(settings.FPS) / 1000 * 1.2  # delta time in seconds | cap fps
 
 
 # dont execute code when importing

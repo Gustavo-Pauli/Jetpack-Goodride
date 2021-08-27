@@ -26,6 +26,7 @@ MAX_OBSTACLE_OFFSET = 860
 BLACK = pygame.color.Color(0, 0, 0)
 WHITE = pygame.color.Color(255, 255, 255)
 YELLOW = pygame.color.Color(255, 255, 0)
+YELLOW_COIN = pygame.color.Color(255, 189, 28)
 
 # DEBUG
 DEBUG = False

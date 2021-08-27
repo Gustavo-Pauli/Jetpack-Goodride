@@ -10,8 +10,9 @@ class Game:
     def __init__(self, main):
         self.main = main
 
-        # paused screen
+        # paused screen black overlay
         self.paused_screen_surface = pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA, 32)
+        self.death_screen_surface = pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA, 32)
 
         ####################### AUDIOS #######################
 
@@ -31,21 +32,25 @@ class Game:
 
         self.obstacles_surface = pygame.image.load('assets/sprites/Zapper1.png').convert_alpha()
         self.obstacles_surface = pygame.transform.scale2x(self.obstacles_surface)
-        # self.obstacle_rect = self.obstacles_surface.get_rect(center=(1920, 360))
+
+        # death screen buttons image
+        self.play_again_image = pygame.image.load('assets/sprites/ButtonPlayAgain.png').convert_alpha()
+        self.shop_image = pygame.image.load('assets/sprites/ButtonShopDeathScreen.png').convert_alpha()
 
         ####################### USER EVENTS #######################
-        # self.spawn_obstacle = pygame.USEREVENT
 
         self.DIED = pygame.USEREVENT + 1  # event id
         self.died = pygame.event.Event(self.DIED)  # event object
 
-
         ####################### GLOBAL VARIABLES #######################
+
         self.gravity = settings.GRAVITY  # TODO maybe a item that change gravity?
 
         # score
         self.score = 0
         self.high_score = 0
+        self.coins_collected = 0
+        self.coins = 0
 
         # player
         self.is_moving_up = False
@@ -72,6 +77,10 @@ class Game:
         self.timer1 = 0
         self.lerp_start_velocity = True
 
+        # death screen buttons
+        self.button_play_again = tools.Button(self.main.screen, self.play_again_image, (settings.WIDTH * 9.5 // 13, 320), 'center')
+        self.button_shop = tools.Button(self.main.screen, self.shop_image, (settings.WIDTH * 9.5 // 13, 416), 'center')
+
         ####################### LOAD SAVE #######################
         self.load_save()
 
@@ -83,13 +92,13 @@ class Game:
             self.main.dt = 0
         self.check_obstacles()
         self.move_things()
+        if self.dead:
+            self.draw_deathscreen()
+        else:
+            self.draw_score_gui()
         self.check_collisions()
         self.update_x_velocity()
         self.debug()
-
-        # GUI
-        tools.draw_text(self.main.screen, 'Distance: %i' % round(self.score), 'left', 48, (34, 90))
-        tools.draw_text(self.main.screen, 'Velocity: %i' % round(self.player_vel_x), 'left', 32, (34, 116))
 
         self.check_paused()
         self.reset_keys()
@@ -127,7 +136,6 @@ class Game:
         self.move_background()
 
         # obstacle movement
-        # if not self.obstacle_num == 0:
         self.foreground_pos_x -= self.player_vel_x * self.main.dt * 1.1  # 1.1 is for parallax with background
         self.move_obstacles(self.obstacles_list)
 
@@ -290,10 +298,37 @@ class Game:
 
     def check_paused(self):
         if self.paused:
-            # pygame.draw.rect(self.main.screen, (0, 0, 0, 70), pygame.Rect(0, 0, settings.WIDTH, settings.HEIGHT))
             self.paused_screen_surface.fill((0, 0, 0, 140))
             self.main.screen.blit(self.paused_screen_surface, (0, 0))
             tools.draw_text(self.main.screen, 'PAUSED', 'center', 96, (settings.WIDTH // 2, settings.HEIGHT // 2))
+
+    def draw_score_gui(self):
+        tools.draw_text(self.main.screen, 'Distance: %i' % round(self.score), 'left', 48, (34, 90))
+        tools.draw_text(self.main.screen, 'Velocity: %i' % round(self.player_vel_x), 'left', 32, (34, 116))
+
+    def draw_deathscreen(self):
+        # draw dark overlay
+        self.death_screen_surface.fill((0, 0, 0, 170))
+        self.main.screen.blit(self.death_screen_surface, (0, 0))
+
+        tools.draw_text(self.main.screen, 'you flew', 'center', 63, (settings.WIDTH * 4 // 13, settings.HEIGHT * 4.62 // 13))
+        tools.draw_text(self.main.screen, '%im' % self.score, 'center', 161, (settings.WIDTH * 4 // 13, settings.HEIGHT * 6.32 // 13), settings.YELLOW_COIN)
+
+        tools.draw_text(self.main.screen, 'and collected', 'center', 38, ((settings.WIDTH * 4 // 13), settings.HEIGHT * 7.86 // 13))  # 89
+        tools.draw_text(self.main.screen, '%i coins' % self.coins_collected, 'center', 38, ((settings.WIDTH * 4 // 13), settings.HEIGHT * 8.53 // 13), settings.YELLOW_COIN)
+
+        # draw buttons
+        self.button_play_again.draw()
+        self.button_shop.draw()
+
+        # detect click
+        if self.button_play_again.check_collision():
+            self.main.game = Game(self.main)  # instantiate game
+        if self.button_shop.check_collision():
+            self.main.menu.current_menu = 'Shop'
+            self.main.in_menu = True
+            self.main.playing = False
+
 
     @staticmethod
     def lerp(A, B, C):

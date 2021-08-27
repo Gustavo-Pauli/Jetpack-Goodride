@@ -2,6 +2,7 @@ import pygame
 import sys
 import scripts.tools as tools
 import scripts.settings as settings
+import scripts.game as game
 
 
 # base class for menu
@@ -91,8 +92,9 @@ class MainMenu:
 
     def check_buttons_interactions(self):
         if self.button_play_game.check_collision():
+            self.menu.main.game = game.Game(self.menu.main)  # instantiate game
             self.menu.main.playing = True
-            self.menu.main.menu = False
+            self.menu.main.in_menu = False
         if self.button_shop.check_collision():
             self.menu.current_menu = 'Shop'
         if self.button_settings.check_collision():
