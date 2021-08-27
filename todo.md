@@ -20,11 +20,19 @@
     * Mute button
     * Change button color on hover
     
+
 * Shop
     * Skins colors ?
     * Different FX
 
+
 * Art
     * ~~Menu background~~
     * Shop
+    
+* Sound
+    * Jetpack
+    * Buttons
+    * Missile
+    * Laser ?
     

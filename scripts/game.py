@@ -51,7 +51,8 @@ class Game:
         self.is_moving_up = False
         self.dead = False
         self.paused = False
-        self.player_pos_y = 240
+        self.player_pos_y = 645
+        self.player_pos_x = -100
         self.player_vel_x = settings.DEFAULT_X_VELOCITY  # TODO make game progressive faster
         self.player_vel_y = 0
 
@@ -67,6 +68,9 @@ class Game:
         self.lerp_factor = 0
         self.lerp_x_vel = False
         self.player_vel_x_start = 0
+
+        self.timer1 = 0
+        self.lerp_start_velocity = True
 
         ####################### LOAD SAVE #######################
         self.load_save()
@@ -103,6 +107,22 @@ class Game:
                 self.lerp_x_vel = False
                 self.player_vel_x = 0
 
+        # TEST
+        # if not self.lerp_start_velocity:  # block controls at start
+        if self.lerp_start_velocity:
+            lerping_time = 4
+            self.timer1 += self.main.dt / lerping_time  # divided by time in seconds of lerp
+
+            # lerp velocity
+            self.player_vel_x = settings.DEFAULT_X_VELOCITY - self.lerp(0, settings.DEFAULT_X_VELOCITY, self.timer1)
+
+            # lerp position x
+            self.player_pos_x = 256 - self.lerp(100, 256, self.timer1)
+            if self.timer1 >= 1 or self.player_vel_x >= settings.DEFAULT_X_VELOCITY:
+                self.lerp_start_velocity = False
+                self.player_vel_x = settings.DEFAULT_X_VELOCITY
+                self.player_pos_x = 256
+
         # background movement
         self.move_background()
 
@@ -129,6 +149,7 @@ class Game:
 
         # update player position and draw
         self.player_rect.y = self.player_pos_y
+        self.player_rect.x = self.player_pos_x
         self.main.screen.blit(self.player_surface, self.player_rect)
 
         # increase distance
@@ -264,7 +285,7 @@ class Game:
         self.UP_KEY, self.DOWN_KEY, self.BACK_KEY, self.START_KEY = False, False, False, False
 
     def update_x_velocity(self):
-        if not self.dead and self.player_vel_x < settings.MAX_X_VELOCITY:
+        if not self.dead and self.player_vel_x < settings.MAX_X_VELOCITY and not self.lerp_start_velocity:
             self.player_vel_x += self.main.dt * 4  # make game progressive faster
 
     def check_paused(self):
