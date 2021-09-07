@@ -7,7 +7,7 @@ This game was made for **learning purpose only**.
 ***
 ## Credits
 
-Programming and GUI art by **GustavoPauli**. \
+Programming, GUI and logo by **GustavoPauli**. \
 https://github.com/Gustavo-Pauli
 
 Art mainly done by **DarkLava**. \

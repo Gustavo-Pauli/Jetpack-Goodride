@@ -136,7 +136,7 @@ class Credits:
         self.draw_logo()
         self.draw_buttons()
 
-        tools.draw_text(self.menu.main.screen, 'Programming and GUI by', 'left', 32, (settings.WIDTH * 5.6 / 10, 0 + self.text_y_offset))
+        tools.draw_text(self.menu.main.screen, 'Programming, GUI and logo by', 'left', 32, (settings.WIDTH * 5.6 / 10, 0 + self.text_y_offset))
         tools.draw_text(self.menu.main.screen, 'Gustavo Pauli', 'left', 32, (settings.WIDTH * 5.6 / 10, 32 + self.text_y_offset))
         tools.draw_text(self.menu.main.screen, 'Art mainly done by', 'left', 32, (settings.WIDTH * 5.6 / 10, 90 + self.text_y_offset))
         tools.draw_text(self.menu.main.screen, 'DarkLava', 'left', 32, (settings.WIDTH * 5.6 / 10, 122 + self.text_y_offset))

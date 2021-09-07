@@ -1,13 +1,14 @@
 * Gameplay
     * Player
-        * Fly bullets FX
+        * ~~Fly bullets FX~~
         * Run animation
         * ~~Animation (pos lerp) at start of gameplay~~
     * Level
         * Coins
         * Not so random obstacles positions
         * Obstacles rotations
-        * Rockets
+        * ~~Rockets~~
+        * Rockets Collision
         * Lasers
     
 
@@ -19,18 +20,20 @@
     * Shop
     * Mute button
     * Change button color on hover
-    * High score
+    * ~~High score~~
+    * Back to menu button
     
 
 * Shop
-    * Skins colors ?
+    * Skins colors
     * Different FX
 
 
 * Art
     * ~~Menu background~~
-    * Shop
+    * ~~Shop~~
     
+
 * Sound
     * Jetpack
     * Buttons

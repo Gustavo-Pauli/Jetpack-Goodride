@@ -34,7 +34,7 @@ class Main:
             self.game.update_game(self)
 
     def update_dt(self):
-        self.dt = self.clock.tick(settings.FPS) / 1000 * 1.2  # delta time in seconds | cap fps
+        self.dt = self.clock.tick(settings.FPS) / 1000  # delta time in seconds | cap fps
 
 
 # dont execute code when importing
