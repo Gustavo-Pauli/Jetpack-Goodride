@@ -8,7 +8,7 @@
         * Not so random obstacles positions
         * Obstacles rotations
         * ~~Rockets~~
-        * Rockets Collision
+        * ~~Rockets Collision~~
         * Lasers
     
 
