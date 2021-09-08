@@ -4,18 +4,13 @@ import math
 import random
 
 
-last_particle_going_right = False
-
-
 class Particle:
-    def __init__(self, main, particle_surface, position):
-        global last_particle_going_right
-
-        self.main = main
+    def __init__(self, particle_generator, particle_surface, position):
+        self.particle_generator = particle_generator
         self.position = position
         self.surface = particle_surface
-        self.angle = math.radians(random.randrange(0, 15) * (-1 if last_particle_going_right else 1))  # angle in radians with Y
-        last_particle_going_right = not last_particle_going_right
+        self.angle = math.radians(random.randrange(0, 15) * (-1 if self.particle_generator.last_particle_going_right else 1))  # angle in radians with Y
+        self.particle_generator.last_particle_going_right = not self.particle_generator.last_particle_going_right
 
 
 class ParticleCollision:
@@ -40,6 +35,7 @@ class ParticleGenerator:
         self.particles_list = []
         self.particle_collision_list = []
         self.spawn_cooldown = 0
+        self.last_particle_going_right = False
 
     def update(self, player_position, is_moving_up):
         self.player_position = player_position
@@ -72,7 +68,7 @@ class ParticleGenerator:
 
         # spawn if needed
         if self.is_moving_up and self.spawn_cooldown <= 0:
-            self.particles_list.append(Particle(self.main, self.particle_surface, self.player_position))
+            self.particles_list.append(Particle(self, self.particle_surface, self.player_position))
             self.spawn_cooldown = 0.08
         else:
             self.spawn_cooldown -= self.main.dt

@@ -21,11 +21,11 @@ class RocketSpawner:
         self.main = main
         self.player_position = ()
         self.rocket_surface = pygame.image.load('assets/sprites/Rocket.png').convert_alpha()
-        self.rocket_surface = pygame.transform.smoothscale(self.rocket_surface, (int(self.rocket_surface.get_width() * 0.8), int(self.rocket_surface.get_height() * 0.8)))
+        self.rocket_surface = pygame.transform.smoothscale(self.rocket_surface, (int(self.rocket_surface.get_width() * 0.75), int(self.rocket_surface.get_height() * 0.75)))
         self.warning_surface = pygame.image.load('assets/sprites/RocketWarning.png').convert_alpha()
         self.warning_surface = pygame.transform.smoothscale(self.warning_surface, (int(self.warning_surface.get_width() * 1.2), int(self.warning_surface.get_height() * 1.2)))
         self.velocity_y = 100
-        self.velocity_x = 2
+        self.velocity_x = 2.4
         self.rocket_list = []
 
     def update(self, player_position):
@@ -46,7 +46,13 @@ class RocketSpawner:
             if rocket.position[0] < -200:
                 self.rocket_list.pop(i)
 
-        #draw
+        # check collision
+        for rocket in self.rocket_list:
+            rocket_rect = pygame.Rect(rocket.position, (self.rocket_surface.get_size()))
+            if rocket_rect.colliderect(self.main.game.player_rect):
+                pygame.event.post(self.main.game.died)
+
+        # draw
         for rocket in self.rocket_list:
             if rocket.position[0] > settings.WIDTH:  # draw warning
                 self.main.screen.blit(self.warning_surface, (1200, rocket.position[1]))
@@ -109,14 +115,21 @@ class Game:
         # --------------------
 
 
-        ####################### USER EVENTS #######################
+        ####################### EVENTS #######################
 
         self.DIED = pygame.USEREVENT + 1  # event id
         self.died = pygame.event.Event(self.DIED)  # event object
 
+        self.TRY_SPAWN_ROCKET = pygame.USEREVENT + 2 # event id
+        self.try_spawn_rocket = pygame.event.Event(self.TRY_SPAWN_ROCKET)  # event object
+
+        pygame.time.set_timer(self.TRY_SPAWN_ROCKET, 1000)  # try to spawn rocket every second
+
         ####################### GLOBAL VARIABLES #######################
 
         self.gravity = settings.GRAVITY  # TODO maybe a item that change gravity?
+
+        self.timer = 0  # time running the game scene
 
         # score
         self.score = 0
@@ -162,6 +175,8 @@ class Game:
 
     def update_game(self, main):
         self.main = main
+
+        # self.timer += self.main.dt
 
         self.check_events(main)
         if self.paused:
@@ -273,8 +288,15 @@ class Game:
 
     def obstacles_check_collision(self, obstacles):
         for obstacle, _ in obstacles:
-            if obstacle.colliderect(self.player_rect):  # check if any obstacle is colliding with player
+            # if obstacle.colliderect(self.player_rect):  # check if any obstacle is colliding with player
+            #     pygame.event.post(self.died)
+            obstacle_collision_rect = pygame.Rect(obstacle[0]+25, obstacle[1]+18, obstacle[2]-50, obstacle[3]-36)
+            if obstacle_collision_rect.colliderect(self.player_rect):  # check if any obstacle is colliding with player
                 pygame.event.post(self.died)
+
+            # DEBUG HITBOX
+            if settings.DEBUG and settings.DEBUG_HIT_BOXES:
+                pygame.draw.rect(self.main.screen, settings.YELLOW, obstacle_collision_rect, 1)
 
     ################## LOAD/SAVE ##################
 
@@ -303,7 +325,7 @@ class Game:
 
     def debug_hit_boxes(self):
         # obstacles
-        pygame.draw.rect(self.obstacles_surface, settings.YELLOW, pygame.Rect(0, 0, 92, 218), 1)
+        # pygame.draw.rect(self.obstacles_surface, settings.YELLOW, pygame.Rect(0, 0, 92, 218), 1)
 
         # player
         if not self.dead:  # flying
@@ -336,6 +358,10 @@ class Game:
                     self.high_score = round(self.score)
                     self.new_high_score = True
 
+            # try to spawn rocket
+            if event.type == self.TRY_SPAWN_ROCKET and not self.dead:
+                self.check_rockets()
+
             # inputs key down
             if event.type == pygame.KEYDOWN and not self.dead:
                 # pause
@@ -366,7 +392,7 @@ class Game:
 
     def update_x_velocity(self):
         if not self.dead and self.player_vel_x < settings.MAX_X_VELOCITY and not self.lerp_start_velocity:
-            self.player_vel_x += self.main.dt * 4  # make game progressive faster
+            self.player_vel_x += self.main.dt  # make game progressive faster
 
     def check_paused(self):
         if self.paused:
@@ -411,7 +437,7 @@ class Game:
     def check_rockets(self):
         # travelled distance > distance covered with obstacles until now
         if -self.foreground_pos_x > settings.OBSTACLE_OFFSET * self.obstacle_num:
-            if random.randint(0, 9) == 0:
+            if random.randint(1, 16) == 1:
                 self.rocket_spawner.spawn()
 
     @staticmethod
