@@ -20,6 +20,22 @@ class Menu:
         self.background_image = pygame.image.load('assets/sprites/BackdropMain.png')
         self.background_image = pygame.transform.scale2x(self.background_image)
 
+        # music
+        pygame.mixer.music.load('assets/sounds/MainMenu.wav')
+        pygame.mixer.music.set_volume(self.main.global_volume * self.main.music_volume)
+        pygame.mixer.music.play(-1, fade_ms=2300)
+
+        # buttons images
+        self.sound_on_image = pygame.image.load('assets/sprites/ButtonSoundOn.png').convert_alpha()
+        self.sound_off_image = pygame.image.load('assets/sprites/ButtonSoundOff.png').convert_alpha()
+        self.music_on_image = pygame.image.load('assets/sprites/ButtonMusicOn.png').convert_alpha()
+        self.music_off_image = pygame.image.load('assets/sprites/ButtonMusicOff.png').convert_alpha()
+
+        # buttons
+        self.button_sound = tools.Button(self.main.screen, self.sound_on_image, (1206, 20))
+        self.button_music = tools.Button(self.main.screen, self.music_on_image, (1144, 20))
+
+
     def update_menu(self, main):
         self.main = main
 
@@ -30,10 +46,60 @@ class Menu:
         elif self.current_menu == 'Credits':
             self.credits.update()
 
+        pygame.mixer.music.set_volume(self.main.global_volume * self.main.music_volume)
+
+        # if music is not playing
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.load('assets/sounds/MainMenu.wav')
+            pygame.mixer.music.play(-1, fade_ms=2300)
+
         pygame.display.update()
 
     def draw_background(self):
         self.main.screen.blit(self.background_image, (0, 0))
+
+    def draw_sound_music_buttons(self):
+        # draw sound button
+        if self.main.sound_on:
+            self.button_sound.image = self.sound_on_image
+            self.button_sound.draw()
+        else:
+            self.button_sound.image = self.sound_off_image
+            self.button_sound.draw()
+
+        # draw music button
+        if self.main.music_on:
+            self.button_music.image = self.music_on_image
+            self.button_music.draw()
+        else:
+            self.button_music.image = self.music_off_image
+            self.button_music.draw()
+
+    def check_sound_music_buttons_interactions(self):
+        if self.button_sound.check_collision():
+            self.mute_audio()
+        if self.button_music.check_collision():
+            self.mute_music()
+
+    def mute_audio(self):
+        if self.main.sound_on:
+            self.main.sound_on = False
+            self.main.last_global_volume = self.main.global_volume
+            self.main.global_volume = 0
+        else:
+            self.main.sound_on = True
+            self.main.global_volume = self.main.last_global_volume
+            self.main.last_global_volume = 0
+
+    def mute_music(self):
+        if self.main.music_on:
+            self.main.music_on = False
+            self.main.last_music_volume = self.main.music_volume
+            self.main.music_volume = 0
+        else:
+            self.main.music_on = True
+            self.main.music_volume = self.main.last_music_volume
+            self.main.last_music_volume = 0
 
 
 class MainMenu:
@@ -88,7 +154,7 @@ class MainMenu:
         self.button_shop.draw()
         self.button_settings.draw()
         self.button_quit.draw()
-        self.button_sound_on.draw()
+        self.menu.draw_sound_music_buttons()
 
     def check_buttons_interactions(self):
         if self.button_play_game.check_collision():
@@ -101,8 +167,7 @@ class MainMenu:
             self.menu.current_menu = 'Credits'
         if self.button_quit.check_collision():
             pygame.event.post(pygame.event.Event(pygame.QUIT))
-        if self.button_sound_on.check_collision():
-            pass
+        self.menu.check_sound_music_buttons_interactions()
 
 
 class Credits:
@@ -118,11 +183,9 @@ class Credits:
         self.logo_image = pygame.transform.smoothscale(self.logo_image, (int(self.logo_image.get_size()[0] * 0.8), int(self.logo_image.get_size()[1] * 0.8)))
 
         # buttons images
-        self.sound_on_image = pygame.image.load('assets/sprites/SoundOn.png').convert_alpha()
         self.back_image = pygame.image.load('assets/sprites/ButtonBack.png').convert_alpha()
 
         # buttons
-        self.button_sound_on = tools.Button(self.menu.main.screen, self.sound_on_image, (1234, 0))
         self.button_back = tools.Button(self.menu.main.screen, self.back_image, (20, 20))
 
     def update(self):
@@ -164,12 +227,11 @@ class Credits:
                                                      settings.HEIGHT // 2 - self.logo_image.get_size()[1] // 2))
 
     def draw_buttons(self):
-        self.button_sound_on.draw()
+        self.menu.draw_sound_music_buttons()
         self.button_back.draw()
 
     def check_buttons_interactions(self):
-        if self.button_sound_on.check_collision():
-            pass
+        self.menu.check_sound_music_buttons_interactions()
         if self.button_back.check_collision():
             self.menu.current_menu = 'MainMenu'
 
@@ -224,11 +286,10 @@ class Shop:
                                                      0))
 
     def draw_buttons(self):
-        self.button_sound_on.draw()
+        self.menu.draw_sound_music_buttons()
         self.button_back.draw()
 
     def check_buttons_interactions(self):
-        if self.button_sound_on.check_collision():
-            pass
+        self.menu.check_sound_music_buttons_interactions()
         if self.button_back.check_collision():
             self.menu.current_menu = 'MainMenu'

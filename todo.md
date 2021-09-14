@@ -18,10 +18,10 @@
     * ~~Credits~~
     * ~~Death screen~~
     * Shop
-    * Mute button
+    * ~~Mute button~~
     * Change button color on hover
     * ~~High score~~
-    * Back to menu button
+    * Back to menu button ?
     
 
 * Shop
@@ -35,8 +35,9 @@
     
 
 * Sound
-    * Jetpack
+    * ~~Jetpack~~
     * Buttons
-    * Missile
+    * ~~Missile~~
+    * ~~death~~
     * Laser ?
     

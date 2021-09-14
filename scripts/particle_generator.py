@@ -23,11 +23,12 @@ class ParticleCollision:
 
 
 class ParticleGenerator:
-    def __init__(self, main, particle_surface, particle_collision_surface, fire_surface=None):
+    def __init__(self, main, particle_surface, particle_collision_surface, fire_surface=None, particle_sound_list=None):
         self.main = main
         self.particle_surface = particle_surface
         self.particle_collision_surface = particle_collision_surface
         self.fire_surface = fire_surface
+        self.particle_sound_list = particle_sound_list
         self.player_position = ()
         self.is_moving_up = False
         self.fire_on = False
@@ -36,6 +37,10 @@ class ParticleGenerator:
         self.particle_collision_list = []
         self.spawn_cooldown = 0
         self.last_particle_going_right = False
+
+        # change volume of all particle sound to the actual volume
+        for i in range(len(particle_sound_list)):
+            self.particle_sound_list[i].set_volume(self.main.global_volume * self.main.sfx_volume)
 
     def update(self, player_position, is_moving_up):
         self.player_position = player_position
@@ -66,10 +71,13 @@ class ParticleGenerator:
                 if particle_collision.timer <= 0:
                     self.particle_collision_list.pop(i)
 
-        # spawn if needed
+        # spawn if needed and play sound
         if self.is_moving_up and self.spawn_cooldown <= 0:
             self.particles_list.append(Particle(self, self.particle_surface, self.player_position))
             self.spawn_cooldown = 0.08
+            if self.particle_sound_list is not []:  # play sound
+                self.particle_sound_list[random.randint(0, len(self.particle_sound_list) - 1)].play()
+                # self.particle_sound.play()
         else:
             self.spawn_cooldown -= self.main.dt
 
@@ -80,7 +88,7 @@ class ParticleGenerator:
             self.fire_on = False
 
         # draw
-        # particle / particle_collision
+        # particle and particle_collision
         for particle in self.particles_list:
             self.main.screen.blit(particle.surface, particle.position)
         for particle_collision in self.particle_collision_list:

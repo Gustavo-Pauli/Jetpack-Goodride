@@ -16,5 +16,8 @@ https://scratch.mit.edu/users/DarkLava/
 New Athletic M54 font by **justme54s**. \
 https://www.dafont.com/new-athletic-m54.font
 
+Soundtrack by **dos88**. \
+https://dos88.itch.io/dos-88-music-library
+
 Go checkout the real **Jetpack Joyride**! \
 https://www.halfbrick.com/games/jetpack-joyride

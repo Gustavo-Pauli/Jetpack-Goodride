@@ -8,60 +8,6 @@ import scripts.settings as settings
 import scripts.particle_generator as particle_generator
 
 
-class Rocket:
-    def __init__(self, rocket_spawer, player_position):
-        self.rocket_spawer = rocket_spawer
-        self.spawn_y_location = random.randrange(settings.MAX_HEIGHT, settings.MIN_HEIGHT)
-        self.position = (player_position[0] + 5120, self.spawn_y_location)
-        self.warning_active = True
-
-
-class RocketSpawner:
-    def __init__(self, main):
-        self.main = main
-        self.player_position = ()
-        self.rocket_surface = pygame.image.load('assets/sprites/Rocket.png').convert_alpha()
-        self.rocket_surface = pygame.transform.smoothscale(self.rocket_surface, (int(self.rocket_surface.get_width() * 0.75), int(self.rocket_surface.get_height() * 0.75)))
-        self.warning_surface = pygame.image.load('assets/sprites/RocketWarning.png').convert_alpha()
-        self.warning_surface = pygame.transform.smoothscale(self.warning_surface, (int(self.warning_surface.get_width() * 1.2), int(self.warning_surface.get_height() * 1.2)))
-        self.velocity_y = 100
-        self.velocity_x = 2.4
-        self.rocket_list = []
-
-    def update(self, player_position):
-        self.player_position = player_position
-
-        # move
-        for rocket in self.rocket_list:
-            if rocket.position[0] > settings.WIDTH:  # if on screen
-                if self.main.game.player_pos_y < rocket.position[1]:  # follow up
-                    rocket.position = (rocket.position[0] - self.main.game.player_vel_x * self.main.dt * self.velocity_x, rocket.position[1] - self.velocity_y * self.main.dt)
-                elif self.main.game.player_pos_y > rocket.position[1]:  # follow down
-                    rocket.position = (rocket.position[0] - self.main.game.player_vel_x * self.main.dt * self.velocity_x, rocket.position[1] + self.velocity_y * self.main.dt)
-            else:  # move on straight line
-                rocket.position = (rocket.position[0] - self.main.game.player_vel_x * self.main.dt * self.velocity_x, rocket.position[1])
-
-        # destroy if needed
-        for i, rocket in enumerate(self.rocket_list):
-            if rocket.position[0] < -200:
-                self.rocket_list.pop(i)
-
-        # check collision
-        for rocket in self.rocket_list:
-            rocket_rect = pygame.Rect(rocket.position, (self.rocket_surface.get_size()))
-            if rocket_rect.colliderect(self.main.game.player_rect):
-                pygame.event.post(self.main.game.died)
-
-        # draw
-        for rocket in self.rocket_list:
-            if rocket.position[0] > settings.WIDTH:  # draw warning
-                self.main.screen.blit(self.warning_surface, (1200, rocket.position[1]))
-            self.main.screen.blit(self.rocket_surface, rocket.position)
-
-    def spawn(self):
-        self.rocket_list.append(Rocket(self.main, (self.main.game.player_pos_x, self.main.game.player_pos_y)))
-
-
 class Game:
 
     def __init__(self, main):
@@ -72,8 +18,6 @@ class Game:
         # paused screen black overlay
         self.paused_screen_surface = pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA, 32)
         self.death_screen_surface = pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA, 32)
-
-        ####################### AUDIOS #######################
 
         ####################### SPRITES #######################
 
@@ -114,7 +58,6 @@ class Game:
 
         # --------------------
 
-
         ####################### EVENTS #######################
 
         self.DIED = pygame.USEREVENT + 1  # event id
@@ -123,7 +66,28 @@ class Game:
         self.TRY_SPAWN_ROCKET = pygame.USEREVENT + 2 # event id
         self.try_spawn_rocket = pygame.event.Event(self.TRY_SPAWN_ROCKET)  # event object
 
+        self.START_GAMEPLAY_MUSIC = pygame.USEREVENT + 3
+
         pygame.time.set_timer(self.TRY_SPAWN_ROCKET, 1000)  # try to spawn rocket every second
+
+        ####################### AUDIOS #######################
+
+        pygame.mixer.music.set_endevent(self.START_GAMEPLAY_MUSIC)
+        pygame.mixer.music.fadeout(1000)
+        # pygame.mixer.music.stop()
+
+        # play music if is not playing
+        if not pygame.mixer.music.get_busy():
+            pygame.event.post(pygame.event.Event(self.START_GAMEPLAY_MUSIC))
+
+        self.fly_sound_list = []
+        self.fly_sound_list.append(pygame.mixer.Sound('assets/sounds/FlyTest2.wav'))
+
+        self.died_eletricity_sound = pygame.mixer.Sound('assets/sounds/DiedEletricity.wav')
+        self.died_eletricity_sound.set_volume(self.main.global_volume * self.main.sfx_volume * 0.4)
+
+        self.died_rocket_sound = pygame.mixer.Sound('assets/sounds/367987__chrisbutler99__launch.wav')
+        self.died_rocket_sound.set_volume(self.main.global_volume * self.main.sfx_volume * 0.05)
 
         ####################### GLOBAL VARIABLES #######################
 
@@ -141,6 +105,7 @@ class Game:
         # player
         self.is_moving_up = False
         self.dead = False
+        self.died_by = None  # Possibilities 'eletricity' and 'rocket'
         self.paused = False
         self.player_pos_y = 645
         self.player_pos_x = -100
@@ -156,7 +121,7 @@ class Game:
         self.obstacle_num = 0
 
         # particles
-        self.fly_particle = particle_generator.ParticleGenerator(self.main, self.fly_particle_surface, self.particle_collision_surface, self.fly_fire_surface)
+        self.fly_particle = particle_generator.ParticleGenerator(self.main, self.fly_particle_surface, self.particle_collision_surface, self.fly_fire_surface, self.fly_sound_list)
 
         # lerp
         self.lerp_factor = 0
@@ -172,6 +137,8 @@ class Game:
 
         ####################### LOAD SAVE #######################
         self.load_save()
+
+        # self.main.dt = 0  # TEST, make game freeze until loaded
 
     def update_game(self, main):
         self.main = main
@@ -266,8 +233,8 @@ class Game:
         if self.bg_pos_x <= -1536:
             self.bg_pos_x += 1536
 
-    # receive a obstacle list, move and draw them
     def move_obstacles(self, obstacles):
+        # receive a obstacle list, move and draw them
         for obstacle, relative_pos in obstacles:
             obstacle.x = self.foreground_pos_x + relative_pos  # move
             self.main.screen.blit(self.obstacles_surface, [obstacle.x, obstacle.y])  # draw
@@ -293,6 +260,7 @@ class Game:
             obstacle_collision_rect = pygame.Rect(obstacle[0]+25, obstacle[1]+18, obstacle[2]-50, obstacle[3]-36)
             if obstacle_collision_rect.colliderect(self.player_rect):  # check if any obstacle is colliding with player
                 pygame.event.post(self.died)
+                self.died_by = 'eletricity'
 
             # DEBUG HITBOX
             if settings.DEBUG and settings.DEBUG_HIT_BOXES:
@@ -346,6 +314,11 @@ class Game:
                 pygame.quit()
                 sys.exit()
 
+            # start gameplay music
+            if event.type == self.START_GAMEPLAY_MUSIC:
+                pygame.mixer.music.load('assets/sounds/Gameplay.wav')
+                pygame.mixer.music.play(-1, fade_ms=2600)
+
             # kill player
             if event.type == self.DIED and not self.dead:
                 self.dead = True
@@ -353,6 +326,12 @@ class Game:
                 self.player_surface = self.player_dead_surface
                 self.lerp_x_vel = True
                 self.player_vel_x_start = self.player_vel_x
+
+                # sound
+                if self.died_by == 'eletricity':
+                    self.died_eletricity_sound.play()
+                elif self.died_by == 'rocket':
+                    self.died_rocket_sound.play()
 
                 if round(self.score) > self.high_score:
                     self.high_score = round(self.score)
@@ -368,8 +347,10 @@ class Game:
                 if event.key == pygame.K_ESCAPE:
                     if self.paused:
                         self.paused = False
+                        pygame.mixer.music.unpause()
                     else:
                         self.paused = True
+                        pygame.mixer.music.pause()
                 if event.key == pygame.K_w:
                     self.is_moving_up = True
 
@@ -378,9 +359,8 @@ class Game:
                 if event.key == pygame.K_w:
                     self.is_moving_up = False
 
-    # check if need to create or destroy obstacles this frame, and do if needed
     def check_obstacles(self):
-        # create obstacles if needed
+        # check if need to create or destroy obstacles this frame, and do if needed
         # travelled distance > distance covered with obstacles until now
         if -self.foreground_pos_x > settings.OBSTACLE_OFFSET * self.obstacle_num:
             self.obstacles_list.append(self.create_obstacle())
@@ -392,7 +372,7 @@ class Game:
 
     def update_x_velocity(self):
         if not self.dead and self.player_vel_x < settings.MAX_X_VELOCITY and not self.lerp_start_velocity:
-            self.player_vel_x += self.main.dt  # make game progressive faster
+            self.player_vel_x += self.main.dt * 2.5  # make game progressive faster
 
     def check_paused(self):
         if self.paused:
@@ -433,13 +413,69 @@ class Game:
             self.main.playing = False
             self.save_game()
 
-    # check if can and try to spawn rockets
     def check_rockets(self):
+        # check if can spawn then try to spawn rockets
         # travelled distance > distance covered with obstacles until now
-        if -self.foreground_pos_x > settings.OBSTACLE_OFFSET * self.obstacle_num:
-            if random.randint(1, 16) == 1:
+        if -self.foreground_pos_x > settings.OBSTACLE_OFFSET * self.obstacle_num and self.obstacle_num > 5:
+            if random.randint(1, 6) == 1:  # chance of spawning rocket
                 self.rocket_spawner.spawn()
 
     @staticmethod
     def lerp(A, B, C):
         return ((1 - C) * A) + ((1 - C) * B)
+
+
+class Rocket:
+    def __init__(self, rocket_spawer, player_position):
+        self.rocket_spawer = rocket_spawer
+        self.spawn_y_location = random.randrange(settings.MAX_HEIGHT, settings.MIN_HEIGHT)
+        self.position = (player_position[0] + 3840, self.spawn_y_location)
+        self.warning_active = True
+
+
+class RocketSpawner:
+    def __init__(self, main):
+        self.main = main
+        self.player_position = ()
+        self.rocket_surface = pygame.image.load('assets/sprites/Rocket.png').convert_alpha()
+        self.rocket_surface = pygame.transform.smoothscale(self.rocket_surface, (int(self.rocket_surface.get_width() * 0.75), int(self.rocket_surface.get_height() * 0.75)))
+        self.warning_surface = pygame.image.load('assets/sprites/RocketWarning.png').convert_alpha()
+        self.warning_surface = pygame.transform.smoothscale(self.warning_surface, (int(self.warning_surface.get_width() * 1.2), int(self.warning_surface.get_height() * 1.2)))
+        self.velocity_y = 100
+        self.velocity_x = 2.4
+        self.rocket_list = []
+
+    def update(self, player_position):
+        self.player_position = player_position
+
+        # move
+        for rocket in self.rocket_list:
+            if rocket.position[0] > settings.WIDTH:  # if on screen
+                if self.main.game.player_pos_y < rocket.position[1]:  # follow up
+                    rocket.position = (rocket.position[0] - self.main.game.player_vel_x * self.main.dt * self.velocity_x, rocket.position[1] - self.velocity_y * self.main.dt)
+                elif self.main.game.player_pos_y > rocket.position[1]:  # follow down
+                    rocket.position = (rocket.position[0] - self.main.game.player_vel_x * self.main.dt * self.velocity_x, rocket.position[1] + self.velocity_y * self.main.dt)
+            else:  # move on straight line
+                rocket.position = (rocket.position[0] - self.main.game.player_vel_x * self.main.dt * self.velocity_x, rocket.position[1])
+
+        # destroy if needed
+        for i, rocket in enumerate(self.rocket_list):
+            if rocket.position[0] < -200:
+                self.rocket_list.pop(i)
+
+        # check collision
+        for rocket in self.rocket_list:
+            rocket_rect = pygame.Rect(rocket.position, (self.rocket_surface.get_size()))
+            if rocket_rect.colliderect(self.main.game.player_rect):
+                pygame.event.post(self.main.game.died)
+                self.main.game.died_by = 'rocket'
+
+        # draw
+        for rocket in self.rocket_list:
+            if rocket.position[0] > settings.WIDTH:  # draw warning
+                self.main.screen.blit(self.warning_surface, (1200, rocket.position[1]))
+            self.main.screen.blit(self.rocket_surface, rocket.position)
+
+    def spawn(self):
+        self.rocket_list.append(Rocket(self.main, (self.main.game.player_pos_x, self.main.game.player_pos_y)))
+

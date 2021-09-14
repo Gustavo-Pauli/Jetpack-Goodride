@@ -13,7 +13,7 @@ FPS = 300
 
 # player settings
 DEFAULT_X_VELOCITY = 480
-MAX_X_VELOCITY = 720
+MAX_X_VELOCITY = 690
 GRAVITY = 1.7
 
 # scenario settings
@@ -29,6 +29,9 @@ BLACK = pygame.color.Color(0, 0, 0)
 WHITE = pygame.color.Color(255, 255, 255)
 YELLOW = pygame.color.Color(255, 255, 0)
 YELLOW_COIN = pygame.color.Color(255, 189, 28)
+
+# audio
+MUSIC_LOC_LIST = []
 
 # DEBUG
 DEBUG = False
