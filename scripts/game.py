@@ -1,4 +1,4 @@
-# this module was the first made, need more object oriented, create player, obstacle, debug and load own classes
+# this module was the first made, need more object oriented, create player, obstacle, debug and save/load own classes
 
 import pygame
 import random
@@ -27,10 +27,10 @@ class Game:
 
         # player ----------
 
-        self.player_fly_surface = pygame.image.load('assets/sprites/PlayerFly.png').convert_alpha()
+        self.player_fly_surface = pygame.image.load('assets/sprites/skins/PlayerFly_' + self.main.player_skin + '.png').convert_alpha()
         self.player_fly_surface = pygame.transform.scale(self.player_fly_surface, [64, 68])  # 1.2x
 
-        self.player_dead_surface = pygame.image.load('assets/sprites/PlayerDead.png').convert_alpha()
+        self.player_dead_surface = pygame.image.load('assets/sprites/skins/PlayerDead_' + self.main.player_skin + '.png').convert_alpha()
         self.player_dead_surface = pygame.transform.scale(self.player_dead_surface, [82, 74])
 
         self.player_surface = self.player_fly_surface  # default player sprite
@@ -74,7 +74,6 @@ class Game:
 
         pygame.mixer.music.set_endevent(self.START_GAMEPLAY_MUSIC)
         pygame.mixer.music.fadeout(1000)
-        # pygame.mixer.music.stop()
 
         # play music if is not playing
         if not pygame.mixer.music.get_busy():
@@ -100,7 +99,6 @@ class Game:
         self.high_score = 0
         self.new_high_score = False
         self.coins_collected = 0
-        self.coins = 0
 
         # player
         self.is_moving_up = False
@@ -243,7 +241,7 @@ class Game:
 
     def create_obstacle(self):
         # [rect object, relative position] TODO change 100% random y to choose from a list
-        return [self.obstacles_surface.get_rect(center=(0, random.randint(190, 540))), settings.FIRST_OBSTACLE_OFFSET - self.foreground_pos_x]
+        return [self.obstacles_surface.get_rect(center=(0, random.randint(180, 554))), settings.FIRST_OBSTACLE_OFFSET - self.foreground_pos_x]
 
     ################## COLLISION ##################
 
@@ -271,6 +269,7 @@ class Game:
     # TODO maybe move this to main, load and save options too
 
     def load_save(self):
+        # high score
         try:
             with open(settings.HIGH_SCORE_LOC, 'r+') as file:
                 self.high_score = int(file.read())
@@ -278,9 +277,16 @@ class Game:
             with open(settings.HIGH_SCORE_LOC, 'w+') as file:
                 file.write('0')
 
+        # skins purchased
+
     def save_game(self):
+        # score
         with open(settings.HIGH_SCORE_LOC, 'w') as file:
             self.score = int(file.write(str(self.high_score)))
+
+        # coins self.coins_collected
+        with open('save/coins.txt', 'w') as file:
+            file.write(str(self.main.coins + self.coins_collected))
 
     #################### DEBUG ####################
 
@@ -333,6 +339,11 @@ class Game:
                 elif self.died_by == 'rocket':
                     self.died_rocket_sound.play()
 
+                # coins
+                self.coins_collected = int(self.score/11)
+                self.main.coins += self.coins_collected
+
+                # high score
                 if round(self.score) > self.high_score:
                     self.high_score = round(self.score)
                     self.new_high_score = True
@@ -361,6 +372,7 @@ class Game:
 
     def check_obstacles(self):
         # check if need to create or destroy obstacles this frame, and do if needed
+
         # travelled distance > distance covered with obstacles until now
         if -self.foreground_pos_x > settings.OBSTACLE_OFFSET * self.obstacle_num:
             self.obstacles_list.append(self.create_obstacle())
@@ -426,8 +438,8 @@ class Game:
 
 
 class Rocket:
-    def __init__(self, rocket_spawer, player_position):
-        self.rocket_spawer = rocket_spawer
+    def __init__(self, rocket_spawner, player_position):
+        self.rocket_spawner = rocket_spawner
         self.spawn_y_location = random.randrange(settings.MAX_HEIGHT, settings.MIN_HEIGHT)
         self.position = (player_position[0] + 3840, self.spawn_y_location)
         self.warning_active = True

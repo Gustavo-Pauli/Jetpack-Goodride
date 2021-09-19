@@ -17,7 +17,7 @@
     * ~~Back button~~
     * ~~Credits~~
     * ~~Death screen~~
-    * Shop
+    * ~~Shop~~
     * ~~Mute button~~
     * Change button color on hover
     * ~~High score~~
@@ -25,7 +25,7 @@
     
 
 * Shop
-    * Skins colors
+    * ~~Skins colors~~
     * Different FX
 
 

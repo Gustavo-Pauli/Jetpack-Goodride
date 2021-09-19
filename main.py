@@ -10,7 +10,7 @@ class Main:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
-        pygame.display.set_caption('Jetpack Goodride')
+        pygame.display.set_caption(settings.TITLE)
         pygame.display.set_icon(pygame.image.load(settings.ICON_LOC))
         self.clock = pygame.time.Clock()
         self.dt = None
@@ -24,11 +24,14 @@ class Main:
         self.sound_on = True
         self.music_on = True
 
+        self.coins = 0
+        self.player_skin = 'Blue'
+        self.skins_purchased = ['Blue']
+
         # game states TODO maybe change to stack list
         self.running = True  # running the program
         self.playing = False  # in gameplay part
         self.in_menu = True
-        # self.game = game.Game(self)  # TODO remove this and put on the button on click play game
         self.game = None
         self.menu = menu.Menu(self)
 
@@ -42,9 +45,6 @@ class Main:
         while self.playing:  # gameplay loop
             self.update_dt()
             self.game.update_game(self)
-
-            # execute only in the frame that stopped playing and went to the shop
-            # pygame.mixer.music.play()
 
     def update_dt(self):
         self.dt = self.clock.tick(settings.FPS) / 1000  # delta time in seconds | cap fps

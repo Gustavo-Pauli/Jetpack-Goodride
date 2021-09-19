@@ -35,7 +35,6 @@ class Menu:
         self.button_sound = tools.Button(self.main.screen, self.sound_on_image, (1206, 20))
         self.button_music = tools.Button(self.main.screen, self.music_on_image, (1144, 20))
 
-
     def update_menu(self, main):
         self.main = main
 
@@ -242,28 +241,111 @@ class Shop:
 
         self.transparency_surface = pygame.Surface((settings.WIDTH, settings.HEIGHT), pygame.SRCALPHA, 32)
 
+        # coins
+        self.load()
+
+        # sound  # TODO move to menu
+        self.wrong_sound = pygame.mixer.Sound('assets/sounds/wrong.wav')
+        self.wrong_sound.set_volume(self.menu.main.global_volume * self.menu.main.sfx_volume * 0.3)
+        self.right_sound = pygame.mixer.Sound('assets/sounds/right.wav')
+        self.right_sound.set_volume(self.menu.main.global_volume * self.menu.main.sfx_volume * 0.3)
+
         # logo
         self.logo_image = pygame.image.load('assets/sprites/LogoGlow.png').convert_alpha()
         self.logo_image = pygame.transform.smoothscale(self.logo_image, (int(self.logo_image.get_size()[0] * 0.4), int(self.logo_image.get_size()[1] * 0.4)))
 
+
         # buttons images
         self.sound_on_image = pygame.image.load('assets/sprites/SoundOn.png').convert_alpha()
         self.back_image = pygame.image.load('assets/sprites/ButtonBack.png').convert_alpha()
+        self.buy_image = pygame.image.load('assets/sprites/ButtonBuy.png').convert_alpha()
+        self.small_buy_image = pygame.transform.smoothscale(self.buy_image, (int(105 * 0.75), int(52 * 0.75)))
+        self.select_image = pygame.image.load('assets/sprites/ButtonSelect.png').convert_alpha()
+        self.small_select_image = pygame.transform.smoothscale(self.select_image, (int(105 * 0.75), int(52 * 0.75)))
+
 
         # buttons
         self.button_sound_on = tools.Button(self.menu.main.screen, self.sound_on_image, (1234, 0))
         self.button_back = tools.Button(self.menu.main.screen, self.back_image, (20, 20))
 
+        self.button_buy_blue = tools.Button(self.menu.main.screen, self.small_buy_image, (620, 320))
+        self.button_select_blue = tools.Button(self.menu.main.screen, self.small_select_image, (620, 320))
+
+        self.button_buy_green = tools.Button(self.menu.main.screen, self.small_buy_image, (802, 320))
+        self.button_select_green = tools.Button(self.menu.main.screen, self.small_select_image, (802, 320))
+
+        self.button_buy_pink = tools.Button(self.menu.main.screen, self.small_buy_image, (984, 320))
+        self.button_select_pink = tools.Button(self.menu.main.screen, self.small_select_image, (984, 320))
+
+        self.button_buy_orange = tools.Button(self.menu.main.screen, self.small_buy_image, (620, 553))
+        self.button_select_orange = tools.Button(self.menu.main.screen, self.small_select_image, (620, 553))
+
+        self.button_buy_red = tools.Button(self.menu.main.screen, self.small_buy_image, (802, 553))
+        self.button_select_red = tools.Button(self.menu.main.screen, self.small_select_image, (802, 553))
+
+        self.button_buy_yellow = tools.Button(self.menu.main.screen, self.small_buy_image, (984, 553))
+        self.button_select_yellow = tools.Button(self.menu.main.screen, self.small_select_image, (984, 553))
+
+        self.button_buy_perry = tools.Button(self.menu.main.screen, self.buy_image, (241, 474))
+        self.button_select_perry = tools.Button(self.menu.main.screen, self.select_image, (241, 474))
+
+
+        # skins
+        self.skin_perry_image = pygame.image.load('assets/sprites/skins/PlayerFly_Perry.png')
+        self.skin_perry_image = pygame.transform.scale(self.skin_perry_image, (53 * 4, 57 * 4))
+
+        self.skin_blue_image = pygame.image.load('assets/sprites/skins/PlayerFly_Blue.png')
+        self.skin_blue_image = pygame.transform.scale(self.skin_blue_image, (53 * 2, 57 * 2))
+
+        self.skin_green_image = pygame.image.load('assets/sprites/skins/PlayerFly_Green.png')
+        self.skin_green_image = pygame.transform.scale(self.skin_green_image, (53 * 2, 57 * 2))
+
+        self.skin_pink_image = pygame.image.load('assets/sprites/skins/PlayerFly_Pink.png')
+        self.skin_pink_image = pygame.transform.scale(self.skin_pink_image, (53 * 2, 57 * 2))
+
+        self.skin_orange_image = pygame.image.load('assets/sprites/skins/PlayerFly_Orange.png')
+        self.skin_orange_image = pygame.transform.scale(self.skin_orange_image, (53 * 2, 57 * 2))
+
+        self.skin_red_image = pygame.image.load('assets/sprites/skins/PlayerFly_Red.png')
+        self.skin_red_image = pygame.transform.scale(self.skin_red_image, (53 * 2, 57 * 2))
+
+        self.skin_yellow_image = pygame.image.load('assets/sprites/skins/PlayerFly_Yellow.png')
+        self.skin_yellow_image = pygame.transform.scale(self.skin_yellow_image, (53 * 2, 57 * 2))
+
+
+        self.skins_list = ['Blue', 'Green', 'Pink', 'Orange', 'Red', 'Yellow', 'Perry']
+        self.skins_200 = ['Blue', 'Green', 'Pink', 'Orange', 'Red', 'Yellow']
+        self.skins_1000 = ['Perry']
+        self.skins_buttons = {
+            'Blue': [self.button_buy_blue, self.button_select_blue],
+            'Green': [self.button_buy_green, self.button_select_green],
+            'Pink': [self.button_buy_pink, self.button_select_pink],
+            'Orange': [self.button_buy_orange, self.button_select_orange],
+            'Red': [self.button_buy_red, self.button_select_red],
+            'Yellow': [self.button_buy_yellow, self.button_select_yellow],
+            'Perry': [self.button_buy_perry, self.button_select_perry]
+        }
+
     def update(self):
         self.check_events()
 
+        # draw background
         self.menu.draw_background()
-
         self.transparency_surface.fill((0, 0, 0, 100))
         self.menu.main.screen.blit(self.transparency_surface, (0, 0))
 
-        self.draw_logo()
+        # draw text
+        tools.draw_text(self.menu.main.screen, 'coins ' + str(self.menu.main.coins), 'center', 42, (640, 52))  # coins
+        tools.draw_text(self.menu.main.screen, '200 c', 'center', 32, (840, 142), settings.YELLOW_COIN)  # perry price
+        tools.draw_text(self.menu.main.screen, '1000 c', 'center', 32, (294, 182), settings.YELLOW_COIN)  # others price
+
+        # update volume
+        self.wrong_sound.set_volume(self.menu.main.global_volume * self.menu.main.sfx_volume * 0.3)
+        self.right_sound.set_volume(self.menu.main.global_volume * self.menu.main.sfx_volume * 0.3)
+
+        # self.draw_logo()
         self.draw_buttons()
+        self.draw_skins()
 
         # tools.draw_text(self.menu.main.screen, 'Shop', 'center', 32, (settings.WIDTH / 2, 200))
 
@@ -289,7 +371,68 @@ class Shop:
         self.menu.draw_sound_music_buttons()
         self.button_back.draw()
 
+        for skin_name in self.skins_list:
+            # draw buy/select button
+            if skin_name not in self.menu.main.skins_purchased:
+                self.skins_buttons[skin_name][0].draw()
+            else:
+                self.skins_buttons[skin_name][1].draw()
+
     def check_buttons_interactions(self):
         self.menu.check_sound_music_buttons_interactions()
         if self.button_back.check_collision():
             self.menu.current_menu = 'MainMenu'
+
+        for skin_name in self.skins_list:
+            if skin_name not in self.menu.main.skins_purchased:
+                # if buy
+                collided = self.skins_buttons[skin_name][0].check_collision()
+                if collided and skin_name in self.skins_200 and self.menu.main.coins >= 200:
+                    self.menu.main.coins -= 200
+                    self.menu.main.skins_purchased.append(skin_name)
+                    self.save()
+                elif collided and skin_name in self.skins_1000 and self.menu.main.coins >= 1000:
+                    self.menu.main.coins -= 1000
+                    self.menu.main.skins_purchased.append(skin_name)
+                    self.save()
+                elif collided:
+                    self.wrong_sound.play()
+            else:
+                # if select
+                if self.skins_buttons[skin_name][1].check_collision():
+                    self.menu.main.player_skin = skin_name
+                    self.right_sound.play()
+
+    def draw_skins(self):
+        self.menu.main.screen.blit(self.skin_perry_image, (182, 230))
+        self.menu.main.screen.blit(self.skin_blue_image, (600, 185))
+        self.menu.main.screen.blit(self.skin_green_image, (782, 185))
+        self.menu.main.screen.blit(self.skin_pink_image, (964, 185))
+        self.menu.main.screen.blit(self.skin_orange_image, (600, 420))
+        self.menu.main.screen.blit(self.skin_red_image, (782, 420))
+        self.menu.main.screen.blit(self.skin_yellow_image, (964, 420))
+
+    def load(self):
+        # coins
+        try:
+            with open('save/coins.txt', 'r+') as file:
+                self.menu.main.coins = int(file.read())
+        except:
+            with open('save/coins.txt', 'w+') as file:
+                file.write('0')
+
+        # skins purchased
+        try:
+            with open('save/skins_purchased.txt', 'r+') as file:
+                self.menu.main.skins_purchased = file.read().split()
+        except:
+            with open('save/skins_purchased.txt', 'w+') as file:
+                file.write('Blue')
+
+    def save(self):
+        with open('save/coins.txt', 'w') as file:
+            file.write(str(self.menu.main.coins))
+
+        with open('save/skins_purchased.txt', 'w') as file:
+            file.write(' '.join(self.menu.main.skins_purchased))
+
