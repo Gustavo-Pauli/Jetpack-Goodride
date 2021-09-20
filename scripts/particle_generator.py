@@ -46,11 +46,12 @@ class ParticleGenerator:
         self.player_position = player_position
         self.is_moving_up = is_moving_up
 
-        # move and destroy if needed
-        # particles
+        # move and destroy if needed - particles
         if self.particles_list is not []:
             for i, particle in enumerate(self.particles_list):
-                particle.position = (particle.position[0] + self.velocity * self.main.dt * math.sin(particle.angle), particle.position[1] + self.velocity * self.main.dt * math.cos(particle.angle))
+                # update position
+                particle.position = (particle.position[0] + self.velocity * self.main.dt * math.sin(particle.angle),
+                                     particle.position[1] + self.velocity * self.main.dt * math.cos(particle.angle))
 
                 # destroy if needed and spawn particle collision
                 if particle.position[1] > settings.MIN_HEIGHT - 20:
@@ -59,10 +60,12 @@ class ParticleGenerator:
                     # create ParticleCollision
                     self.particle_collision_list.append(ParticleCollision(self.main, self.particle_collision_surface, particle.position))
 
-        # particles collision
+        # move and destroy if needed - particles collision
         if self.particle_collision_list is not []:
             for i, particle_collision in enumerate(self.particle_collision_list):
-                particle_collision.position = (particle_collision.position[0] - self.main.game.player_vel_x * self.main.dt, particle_collision.position[1])
+                # update position
+                particle_collision.position = (particle_collision.position[0] - self.main.game.player_vel_x * self.main.dt,
+                                               particle_collision.position[1])
 
                 # deduce time
                 particle_collision.timer -= self.main.dt
@@ -77,22 +80,23 @@ class ParticleGenerator:
             self.spawn_cooldown = 0.08
             if self.particle_sound_list is not []:  # play sound
                 self.particle_sound_list[random.randint(0, len(self.particle_sound_list) - 1)].play()
-                # self.particle_sound.play()
         else:
             self.spawn_cooldown -= self.main.dt
 
-        # fire control on/off
+        # fire control on/off - don't spawn if paused
         if self.is_moving_up and self.fire_surface is not None and not self.main.dt == 0:
             self.fire_on = True
         elif not self.main.dt == 0:
             self.fire_on = False
 
-        # draw
-        # particle and particle_collision
+        # draw - particle
         for particle in self.particles_list:
             self.main.screen.blit(particle.surface, particle.position)
+
+        # draw - particle_collision
         for particle_collision in self.particle_collision_list:
             self.main.screen.blit(self.particle_collision_surface, particle_collision.position)
-        # fire
+
+        # draw - fire
         if self.fire_on:
             self.main.screen.blit(self.fire_surface, (player_position[0] - self.fire_surface.get_width()/2.6, player_position[1] + 7))

@@ -282,7 +282,7 @@ class Game:
     def save_game(self):
         # score
         with open(settings.HIGH_SCORE_LOC, 'w') as file:
-            self.score = int(file.write(str(self.high_score)))
+            file.write(str(self.high_score))
 
         # coins self.coins_collected
         with open('save/coins.txt', 'w') as file:
@@ -345,7 +345,7 @@ class Game:
 
                 # high score
                 if round(self.score) > self.high_score:
-                    self.high_score = round(self.score)
+                    self.high_score = int(self.score)
                     self.new_high_score = True
 
             # try to spawn rocket
@@ -393,7 +393,7 @@ class Game:
             tools.draw_text(self.main.screen, 'PAUSED', 'center', 96, (settings.WIDTH // 2, settings.HEIGHT // 2))
 
     def draw_score_gui(self):
-        tools.draw_text(self.main.screen, 'Distance: %i' % round(self.score), 'left', 48, (34, 90))
+        tools.draw_text(self.main.screen, 'Distance: %i' % self.score, 'left', 48, (34, 90))
         # tools.draw_text(self.main.screen, 'Velocity: %i' % round(self.player_vel_x), 'left', 32, (34, 116))
         tools.draw_text(self.main.screen, 'Best: %i' % self.high_score, 'left', 32, (34, 116))
 
@@ -417,13 +417,13 @@ class Game:
 
         # detect click
         if self.button_play_again.check_collision():
-            self.main.game = Game(self.main)  # instantiate game
             self.save_game()
+            self.main.game = Game(self.main)  # instantiate game
         if self.button_shop.check_collision():
+            self.save_game()
             self.main.menu.current_menu = 'Shop'
             self.main.in_menu = True
             self.main.playing = False
-            self.save_game()
 
     def check_rockets(self):
         # check if can spawn then try to spawn rockets
