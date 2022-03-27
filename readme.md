@@ -4,6 +4,7 @@
 A Jetpack Joyride clone in **pygame**.\
 This game was made for **learning purpose only**.
 
+[Demo video](https://www.youtube.com/watch?v=AGmhM9LWP6g)
 ***
 ## Credits
 
