@@ -4,8 +4,24 @@
 A Jetpack Joyride clone in **pygame**.\
 This game was made for **learning purpose only**.
 
-[Demo video](https://www.youtube.com/watch?v=AGmhM9LWP6g)
+[Demo video (pt-BR)](https://www.youtube.com/watch?v=AGmhM9LWP6g)
+
 ***
+
+## Screenshots
+<table>
+  <tr>
+    <td><img src="https://i.postimg.cc/Bbjp2Vd1/Jetpack-Goodride-Death.jpg" /></td>
+    <td><img src="https://i.postimg.cc/kMHf77bN/Jetpack-Goodride-Gameplay.jpg" /></td>
+  </tr>
+  <tr>
+    <td><img src="https://i.postimg.cc/15NMtbGk/Jetpack-Goodride-Menu.jpg" /></td>
+    <td><img src="https://i.postimg.cc/QCvbmq3Y/Jetpack-Goodride-Shop.jpg" /></td>
+  </tr>
+</table>
+
+</br>
+
 ## Credits
 
 Programming, GUI and logo by **GustavoPauli**. \
